@@ -1,6 +1,6 @@
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Embedding, Flatten, Dot, Concatenate, Dense, Dropout, BatchNormalization
-from tensorflow.keras.regularizers import l2
+from keras.models import Model
+from keras.layers import Input, Embedding, Flatten, Dot, Concatenate, Dense, Dropout, BatchNormalization
+from keras.regularizers import l2
 from sklearn.metrics import mean_absolute_error
 import numpy as np
 
