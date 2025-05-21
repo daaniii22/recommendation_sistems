@@ -180,16 +180,29 @@ class KNN:
         else:
             raise ValueError('Invalid prediction mode')
     
-    def recommend(self, ratings_u: np.ndarray, N: int, *, prediction_mode: Literal['average', 'weighted_average', 'deviation_from_mean'] = 'weighted_average'):
+    
+    def recommend(
+        self,
+        ratings_u: np.ndarray,
+        N: int,
+        *,
+        prediction_mode: Literal['average', 'weighted_average', 'deviation_from_mean'] = 'weighted_average',
+        sorted: bool = False,
+    ) -> np.ndarray:
         predictions = self.predict_all(ratings_u, prediction_mode=prediction_mode)
         if len(predictions) < N:
             warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
             recommendations = np.arange(len(predictions))
             recommendations = recommendations[~np.isnan(predictions[recommendations])]
+            if sorted:
+                recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
             return recommendations
         
 
         predictions = np.where(~np.isnan(predictions), predictions, 0)
-        recommendations = np.argpartition(predictions, -N)[-N:] # Más eficiente que ordenar
-        return recommendations[predictions[recommendations] != 0]
+        recommendations = np.argpartition(predictions, -N)[-N:]
+        recommendations = recommendations[predictions[recommendations] != 0]
+        if sorted:
+            recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+        return recommendations
         

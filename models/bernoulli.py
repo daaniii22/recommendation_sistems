@@ -63,13 +63,18 @@ class BernoulliFactorization:
         logits = np.einsum('sf,sif->is', self.U[:,u], self.V)
         return self.scores[np.argmax(logits, axis=1)]
         
-    def get_recommendations(self, u: int, n: int = 10) -> np.ndarray:
+    def recommend(self, u: int, N: int = 10, *,sorted: bool = False) -> np.ndarray:
         predictions = self.predict_all(u)
-        if len(predictions) < n:
-            warnings.warn(f'Not enough items in dataset for {n} recommendations ({len(predictions)}).', RuntimeWarning)
-            return np.arange(len(predictions))
+        if len(predictions) < N:
+            warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
+            recommendations = np.arange(len(predictions))
+            if sorted:
+                recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+            return recommendations
         
-        recommendations = np.argpartition(predictions, -n)[-n:]
+        recommendations = np.argpartition(predictions, -N)[-N:]
+        if sorted:
+            recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
         return recommendations
         
     def fit(
