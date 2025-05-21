@@ -8,18 +8,17 @@ from numpy.typing import ArrayLike
 
 class MatrixFactorization:
     
-    def __init__(self, n_users: int, n_items: int, n_factors: int = 7):
+    def __init__(self, n_users: int, n_items: int, n_factors: int = 7, seed: int = None):
         self.n_factors = n_factors
         self.n_users = n_users
         self.n_items = n_items
-        self.p = np.random.rand(n_users, n_factors)
-        self.bu = np.random.rand(n_users)
-        self.q = np.random.rand(n_items, n_factors)
-        self.bi = np.random.rand(n_items)
+        rng = np.random.default_rng(seed)
+        self.p = rng.random(n_users, n_factors)
+        self.bu = rng.random(n_users)
+        self.q = rng.random(n_items, n_factors)
+        self.bi = rng.random(n_items)
         
     def _check(self, u: int, i: int = None) -> None:
-        if not hasattr(self, 'p'):
-            raise ValueError('Model not fitted yet')
         if not 0 <= u < len(self.p):
             raise ValueError(f'User ID {u} out of range [0, {len(self.p)})')
         if i is not None and not 0 <= i < len(self.q):
