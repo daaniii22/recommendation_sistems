@@ -13,9 +13,9 @@ class MatrixFactorization:
         self.n_users = n_users
         self.n_items = n_items
         rng = np.random.default_rng(seed)
-        self.p = rng.random(n_users, n_factors)
+        self.p = rng.random((n_users, n_factors))
         self.bu = rng.random(n_users)
-        self.q = rng.random(n_items, n_factors)
+        self.q = rng.random((n_items, n_factors))
         self.bi = rng.random(n_items)
         
     def _check(self, u: int, i: int = None) -> None:
