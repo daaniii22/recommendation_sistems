@@ -8,8 +8,14 @@ from numpy.typing import ArrayLike
 
 class MatrixFactorization:
     
-    def __init__(self, n_factors: int = 7):
+    def __init__(self, n_users: int, n_items: int, n_factors: int = 7):
         self.n_factors = n_factors
+        self.n_users = n_users
+        self.n_items = n_items
+        self.p = np.random.rand(n_users, n_factors)
+        self.bu = np.random.rand(n_users)
+        self.q = np.random.rand(n_items, n_factors)
+        self.bi = np.random.rand(n_items)
         
     def _check(self, u: int, i: int = None) -> None:
         if not hasattr(self, 'p'):
@@ -36,15 +42,10 @@ class MatrixFactorization:
         regularization: float = 0.1,
         verbose: bool = False,
     ):
-        if min(U) < 0 and max(U) >= len(U):
+        if min(U) < 0 and max(U) >= self.n_users:
             raise ValueError('User IDs must be in the range [0, len(U))')
-        if min(I) < 0 or max(I) >= len(I):
+        if min(I) < 0 or max(I) >= self.n_items:
             raise ValueError('Item IDs must be in the range [0, len(I))')
-        
-        self.p = np.random.rand(len(U), self.n_factors)
-        self.bu = np.random.rand(len(U))
-        self.q = np.random.rand(len(I), self.n_factors)
-        self.bi = np.random.rand(len(I))
         
         iterable = range(epochs) if not verbose else tqdm(range(epochs), desc='Training')
         for _ in iterable:
