@@ -69,12 +69,12 @@ class BernoulliFactorization:
             warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
             recommendations = np.arange(len(predictions))
             if sorted:
-                recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+                recommendations = recommendations[np.argsort(-predictions[recommendations])]
             return recommendations
         
         recommendations = np.argpartition(predictions, -N)[-N:]
         if sorted:
-            recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+            recommendations = recommendations[np.argsort(-predictions[recommendations])]
         return recommendations
         
     def fit(

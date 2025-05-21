@@ -195,7 +195,7 @@ class KNN:
             recommendations = np.arange(len(predictions))
             recommendations = recommendations[~np.isnan(predictions[recommendations])]
             if sorted:
-                recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+                recommendations = recommendations[np.argsort(-predictions[recommendations])]
             return recommendations
         
 
@@ -203,6 +203,6 @@ class KNN:
         recommendations = np.argpartition(predictions, -N)[-N:]
         recommendations = recommendations[predictions[recommendations] != 0]
         if sorted:
-            recommendations = recommendations[np.argsort(predictions[recommendations])[::-1]]
+            recommendations = recommendations[np.argsort(-predictions[recommendations])]
         return recommendations
         
