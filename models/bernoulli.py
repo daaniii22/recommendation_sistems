@@ -1,0 +1,3 @@
+
+class BernoulliFactorization:
+    pass
