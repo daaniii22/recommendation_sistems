@@ -39,16 +39,24 @@ class MatrixFactorization:
         epochs: int = 10,
         learning_rate: float = 0.001,
         regularization: float = 0.1,
-        verbose: bool = False,
+        verbose: int = 0,
     ):
         if min(U) < 0 and max(U) >= self.n_users:
             raise ValueError('User IDs must be in the range [0, len(U))')
         if min(I) < 0 or max(I) >= self.n_items:
             raise ValueError('Item IDs must be in the range [0, len(I))')
         
-        iterable = range(epochs) if not verbose else tqdm(range(epochs), desc='Training')
-        for _ in iterable:
-            for u, i, rating in zip(U, I, ratings):
+        
+        for epoch in tqdm(range(epochs), desc='Training', unit='epoch', disable=verbose != 1):
+            pbar = tqdm(
+                zip(U, I, ratings),
+                total=len(ratings),
+                desc=f'Epoch {epoch + 1}',
+                unit='it',
+                mininterval=0.2,
+                disable=verbose < 2,
+            )
+            for u, i, rating in pbar:
                 prediction = self.predict(u, i)
                 error = rating - prediction
                 
