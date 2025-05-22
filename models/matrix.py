@@ -68,18 +68,18 @@ class MatrixFactorization:
     def predict_all(self, u: int) -> np.ndarray:
         self._check(u)
         return np.dot(self.p[u], self.q.T) + self.bu[u] + self.bi
+
     
-    def recommend(self, u: int, n: int = 10) -> np.ndarray:
-        predictions = self.predict_all(u)
-        if len(predictions) < n:
-            warnings.warn(f'Not enough items in dataset for {n} recommendations ({len(predictions)}).', RuntimeWarning)
-            return np.arange(len(predictions))
-        
-        recommendations = np.argpartition(predictions, -n)[-n:]
-        return recommendations
-    
-    def recommend(self, u: int, N: int = 10, *,sorted: bool = False) -> np.ndarray:
-        predictions = self.predict_all(u)
+    def recommend(
+        self,
+        u: int,
+        N: int = 10,
+        *,
+        sorted: bool = False,
+        predictions: np.ndarray = None,
+    ) -> np.ndarray:
+        if predictions is None:
+            predictions = self.predict_all(u)
         if len(predictions) < N:
             warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
             recommendations = np.arange(len(predictions))

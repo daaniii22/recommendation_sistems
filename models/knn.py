@@ -187,9 +187,11 @@ class KNN:
         N: int,
         *,
         prediction_mode: Literal['average', 'weighted_average', 'deviation_from_mean'] = 'weighted_average',
+        predictions: np.ndarray = None,
         sorted: bool = False,
     ) -> np.ndarray:
-        predictions = self.predict_all(ratings_u, prediction_mode=prediction_mode)
+        if predictions is None:
+            predictions = self.predict_all(ratings_u, prediction_mode=prediction_mode)
         if len(predictions) < N:
             warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
             recommendations = np.arange(len(predictions))

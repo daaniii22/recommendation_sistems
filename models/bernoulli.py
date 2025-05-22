@@ -63,8 +63,16 @@ class BernoulliFactorization:
         logits = np.einsum('sf,sif->is', self.U[:,u], self.V)
         return self.scores[np.argmax(logits, axis=1)]
         
-    def recommend(self, u: int, N: int = 10, *,sorted: bool = False) -> np.ndarray:
-        predictions = self.predict_all(u)
+    def recommend(
+        self,
+        u: int,
+        N: int = 10,
+        *,
+        sorted: bool = False,
+        predictions: np.ndarray = None
+    ) -> np.ndarray:
+        if predictions is None:
+            predictions = self.predict_all(u)
         if len(predictions) < N:
             warnings.warn(f'Not enough items in dataset for {N} recommendations ({len(predictions)}).', RuntimeWarning)
             recommendations = np.arange(len(predictions))
