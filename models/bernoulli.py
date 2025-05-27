@@ -4,6 +4,12 @@ import warnings
 
 import numpy as np
 from numpy.typing import ArrayLike
+from typing import Callable
+
+def get_mae(true: np.ndarray, predictions: np.ndarray) -> float:
+    ae = np.abs(true - predictions)
+    return ae.mean()
+
 
 class BernoulliFactorization:
     
@@ -62,6 +68,17 @@ class BernoulliFactorization:
         self._check(u)
         logits = np.einsum('sf,sif->is', self.U[:,u], self.V)
         return self.scores[np.argmax(logits, axis=1)]
+    
+    def predict_many(self, U: np.array, I: np.ndarray) -> np.ndarray:
+        if len(U) != len(I):
+            raise ValueError('Input arrays must have the same length')
+        if min(U) < 0 or max(U) >= self.n_users:
+            raise ValueError(f'User IDs must be in the range [0, {self.n_users})')
+        if min(I) < 0 or max(I) >= self.n_items:
+            raise ValueError(f'Item IDs must be in the range [0, {self.n_items})')
+        
+        logits = np.einsum('sef,sef->es', self.U[:,U], self.V[:,I])
+        return self.scores[np.argmax(logits, axis=-1)]
         
     def recommend(
         self,
@@ -84,22 +101,43 @@ class BernoulliFactorization:
         if sorted:
             recommendations = recommendations[np.argsort(-predictions[recommendations])]
         return recommendations
+    
+    
+    def validate(
+        self,
+        U: ArrayLike | Sequence[int],
+        I: ArrayLike | Sequence[int],
+        ratings: ArrayLike | Sequence[int],
+        *,
+        metric: Callable[[np.ndarray, np.ndarray], float] = get_mae
+    ) -> float:
+        if len(U) != len(ratings):
+            raise ValueError('Input arrays must have the same length')
+        
+        predictions = self.predict_many(U, I)
+        return metric(ratings, predictions)
+        
         
     def fit(
         self,
         U: ArrayLike | Sequence[int],
         I: ArrayLike | Sequence[int],
-        ratings: ArrayLike | Sequence[float],
+        ratings: ArrayLike | Sequence[int],
         epochs: int = 10,
         learning_rate: float = 0.0001,
         regularization: float = 0.1,
         verbose: int = 0,
+        validation_data: tuple[np.ndarray, np.ndarray, np.ndarray] = None,
+        validation_metric: Callable[[np.ndarray, np.ndarray], float] = get_mae,
     ):
-        if min(U) < 0 and max(U) >= self.n_users:
-            raise ValueError('User IDs must be in the range [0, len(U))')
+        if len(U) != len(I) or len(U) != len(ratings):
+            raise ValueError('Input arrays must have the same length')
+        if min(U) < 0 or max(U) >= self.n_users:
+            raise ValueError(f'User IDs must be in the range [0, {self.n_users})')
         if min(I) < 0 or max(I) >= self.n_items:
-            raise ValueError('Item IDs must be in the range [0, len(I))')
+            raise ValueError(f'Item IDs must be in the range [0, {self.n_items})')
         
+        history = []
         for epoch in tqdm(range(epochs), desc='Training', unit='epoch', disable=verbose != 1):
             pbar = tqdm(
                 zip(U, I, ratings),
@@ -123,3 +161,14 @@ class BernoulliFactorization:
                 deltaV -= regularization * self.V[:,i]
                 deltaV *= learning_rate
                 self.V[:,i] += deltaV
+                
+            train_score = self.validate(U, I, ratings, metric=validation_metric)
+            if validation_data is not None:
+                val_score = self.validate(*validation_data, metric=validation_metric)
+                tqdm.write(f'Epoch {epoch + 1} - train score: {train_score:.4f} - validation score: {val_score:.4f}')
+            elif verbose >= 2:
+                tqdm.write(f'Epoch {epoch + 1} - training score: {train_score:.4f}')
+                
+            history.append(train_score if validation_data is None else val_score)          
+            
+        return history
